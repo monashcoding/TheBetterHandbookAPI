@@ -1,4 +1,11 @@
 
+import string
+
+# Type aliases for readability
+PrereqOption = dict[str]
+UnitCode = str
+
+
 class Unit:
     """
     Stores unit information.
@@ -19,6 +26,8 @@ class Unit:
 
         self.description : str = ""
         self.requisites = self.Requisites(self)
+
+        self.offerings = self.Offerings(self)
 
     def set_unit_code(self, unit_code):
         """Set new string for unit code."""
@@ -52,26 +61,86 @@ class Unit:
         """Return unit description string."""
         return self.description
 
-    def __repr__(self):
+    def get_offerings(self) -> list[dict[str]]:
+        return self.offerings
+
+    def __repr__(self) -> str:
         """
         Printable representation of the unit.
         `FIT1045 Introduction to algorithms and Python`
         """
         return f'{self.unit_code} {self.name}'
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String representation of the unit.
         `FIT1045 Introduction to algorithms and Python`
         """
         return f'{self.unit_code} {self.name}'
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """
         2 Unit objects are equal if they share the same unit code, name and credits award.
         """
         return self.unit_code == other.unit_code and self.name == other.name and self.credits == other.credits
 
+    class Offering:
+        """;
+        Unit offering:
+        # Campus: CLAYTON, CAULFIELD, MALAYSIA, etc
+        # Period: S1, S2, etc
+        # Mode: ONLINE, ON-CAMPUS, etc
+        """
+
+        def __init__(self, period : str, campus : str, mode : str):
+            self.campus: str = campus
+            self.period : str = period
+            self.mode : str = mode
+
+        def __repr__(self) -> str:
+            return f'{self.period}-{self.campus}-{self.mode}'
+
+        def __str__(self) -> str:
+            return f'{self.period}-{self.campus}-{self.mode}'
+
+    class Offerings:
+        def __init__(self, parent_unit):
+            self.parent_unit = parent_unit
+            self.all_offerings = []
+
+        def get_all_offerings(self):
+            return self.all_offerings
+
+        def add_offering(self, offering):
+            offering.campus : str = offering.campus.upper()
+            offering.mode : str = offering.mode.upper()
+            offering.period : str = offering.period.upper()
+            self.all_offerings.append(offering)
+
+        def add_offerings(self, offerings : list):
+            for offering in offerings:
+                self.add_offering(offering)
+
+        def get_offerings_by_campus(self, campus : str) -> list:
+            campus_offerings = []
+            for offering in self.all_offerings:
+                if offering.campus == campus.upper():
+                    campus_offerings.append(offering)
+            return campus_offerings
+
+        def get_offerings_by_mode(self, mode : str) -> list:
+            mode_offerings = []
+            for offering in self.all_offerings:
+                if offering.mode == mode.upper():
+                    mode_offerings.append(offering)
+            return mode_offerings
+
+        def get_offerings_by_period(self, period : str) -> list:
+            period_offerings = []
+            for offering in self.all_offerings:
+                if offering.period == period.upper():
+                    period_offerings.append(offering)
+            return period_offerings
 
     class Requisites:
         """
@@ -84,12 +153,12 @@ class Unit:
             Sets the parent unit for access to upper level information (parent unit code).
             """
             self.parent_unit = parent_unit
-            self.prerequisites: list[dict[str]] = [] # [{'NumReq':int, units:list[str]}, ...]
+            self.prerequisites: list[PrereqOption] = [] # [{'NumReq':int, units:list[str]}, ...]
             self.permission_required: bool = False
-            self.prohibitions: list[str] = [] # [MTH1020, PHS1030...]
-            self.corequisites: list[str] = [] # Same as above
+            self.prohibitions: list[UnitCode] = [] # [MTH1020, PHS1030...]
+            self.corequisites: list[UnitCode] = [] # Same as above
 
-        def set_prerequisites(self, prereqs : list[dict[str]]):
+        def set_prerequisites(self, prereqs : list[PrereqOption]):
             """Set list of dictionaries of prerequisite routes/options."""
             self.prerequisites = prereqs
 
@@ -97,15 +166,15 @@ class Unit:
             """Set boolean of additional permission requirement to enrol in unit."""
             self.permission_required = permission_required
 
-        def set_prohibitions(self, prohibitions : list[str]):
+        def set_prohibitions(self, prohibitions : list[UnitCode]):
             """Set list of string for names of prohibited units."""
             self.prohibitions = prohibitions
 
-        def set_corequisites(self, coreqs : list[str]):
+        def set_corequisites(self, coreqs : list[UnitCode]):
             """Set list of string for names of corequisite units."""
             self.corequisites = coreqs
 
-        def get_prerequisites(self) -> list[dict[str]]:
+        def get_prerequisites(self) -> list[PrereqOption]:
             """Get list of dictionaries of prerequisite routes/options."""
             return self.prerequisites
         
@@ -113,11 +182,11 @@ class Unit:
             """Get boolean of additional permission requirement to enrol in unit."""
             return self.permission_required
         
-        def get_prohibitions(self) -> list[str]:
+        def get_prohibitions(self) -> list[UnitCode]:
             """Get list of string for names of prohibited units."""
             return self.prohibitions
 
-        def get_corequisites(self) -> list[str]:
+        def get_corequisites(self) -> list[UnitCode]:
             """Get list of string for names of corequisite units."""
             return self.corequisites
 
@@ -164,7 +233,7 @@ class Unit:
             else:
                 print(f'{self.parent_unit.unit_code} has {len(self.prohibitions)} prohibitions: {", ".join(self.prohibitions)}.')
 
-        # Alias for usability
+        # Methods aliases for usability
         requires_permission = get_permission_required 
         set_prereqs = set_prerequisites
         get_prereqs = get_prerequisites
@@ -180,6 +249,7 @@ class Unit:
         get_prohibs = get_prohibitions
         remove_prohibs = remove_prohibitions
         print_prohibs = print_prohibitions
+
 
 def test():
 
@@ -201,3 +271,19 @@ def test():
     fit.requisites.print_permission_requirement()
     fit.requisites.print_corequisites()
     fit.requisites.print_prohibs()
+    fit.offerings.add_offerings(
+        [Unit.Offering('S1','CLAYTON','ONLINE'), 
+        Unit.Offering('S1','CLAYTON','ON-CAMPUS'),
+        Unit.Offering('S2','CLAYTON','ONLINE'),
+        Unit.Offering('S2','CLAYTON','ON-CAMPUS'),
+        Unit.Offering('S1','CAULFIED','ONLINE'), 
+        Unit.Offering('S1','CAULFIED','ON-CAMPUS'),
+        Unit.Offering('S2','CAULFIED','ONLINE'),
+        Unit.Offering('S2','CAULFIED','ON-CAMPUS')])
+    print(fit.offerings.get_all_offerings())
+    print(fit.offerings.get_offerings_by_campus('clayton'))
+    print(fit.offerings.get_offerings_by_period('s1'))
+    print(fit.offerings.get_offerings_by_mode('online'))
+
+
+#test()
