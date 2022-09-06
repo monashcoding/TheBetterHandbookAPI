@@ -157,6 +157,7 @@ class Unit:
             self.permission_required: bool = False
             self.prohibitions: list[UnitCode] = [] # [MTH1020, PHS1030...]
             self.corequisites: list[UnitCode] = [] # Same as above
+            self.cp_required: int = 0
 
         def set_prerequisites(self, prereqs : list[PrereqOption]):
             """Set list of dictionaries of prerequisite routes/options."""
@@ -174,6 +175,10 @@ class Unit:
             """Set list of string for names of corequisite units."""
             self.corequisites = coreqs
 
+        def get_cp_required(self, cp_required: int):
+            """ Get the amount of prior CP required before enrolling"""
+            self.cp_required = cp_required
+
         def get_prerequisites(self) -> list[PrereqOption]:
             """Get list of dictionaries of prerequisite routes/options."""
             return self.prerequisites
@@ -189,6 +194,10 @@ class Unit:
         def get_corequisites(self) -> list[UnitCode]:
             """Get list of string for names of corequisite units."""
             return self.corequisites
+        
+        def get_cp_required(self) -> int:
+            """ Get the amount of prior CP required before enrolling"""
+            return self.cp_required
 
         def remove_prerequisites(self):
             """Remove all prerequisites by emptying the list."""
