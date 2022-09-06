@@ -35,7 +35,7 @@ def create_requisites(requsite_results: dict[str, enrolment_rules]) -> dict[str]
                 # There are only three units in the latter case
                 case "Have not enrolled in a unit" | "Have not completed enough units":
                     parsed_requisites[unit]["prerequisites"].append(
-                        {"required": 1, "unit_options": get_named_units(unit_rule["description"])})
+                        {"NumReq": 1, "units": get_named_units(unit_rule["description"])})
 
                 case "Have not passed enough units":
                     number_required_msg, units_msg = unit_rule['description'].split(
@@ -43,8 +43,8 @@ def create_requisites(requsite_results: dict[str, enrolment_rules]) -> dict[str]
 
                     # TODO: REGEX pattern cannot pick up BMS3052 prereqs as they are BIO\u2026
                     parsed_requisites[unit]["prerequisites"].append({
-                        "required": get_number_from_msg(number_required_msg),
-                        "unit_options": units_msg.strip().replace(" or", ",").split(", ")
+                        "NumReq": get_number_from_msg(number_required_msg),
+                        "units": units_msg.strip().replace(" or", ",").split(", ")
                     })
 
                 case "Not enough passed credit points" | "Not enough enrolled credit points":
