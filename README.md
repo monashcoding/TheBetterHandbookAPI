@@ -114,14 +114,18 @@ MonPlan POSTs a request to `https://mscv.apps.monash.edu` with a course plan in 
 
 Here `units` is a list of unit codes.
 
+### Collating all data
+
+To collate all data into a `.json` file run the following:
+
+```
+python -m src.data_processing.collate_handbook_data
+```
+This process will take 2-3 minutes.
+
 ## TODO
 
-- Look at Handbook returns for prohibitions and corequisites, use Regex on both enrolment rules group and requisites.
-- Do a secondary scrape of the MonPlan with prohibitions by putting them all together. There are likely no more than 100 prohibitions. (Is this required?)
-- Collate data, in case of prohibitions, add them straight to the dataset
-- For corequisites, add as well
+- Code review
 - Remove units that are no longer offered
 - Incorporate data patcher after collating (ADD,SET) operation, set for cp, add for rule that doesn't get added
-- Implement serialisation class
 - https://ipython-books.github.io/64-visualizing-a-networkx-graph-in-the-notebook-with-d3js/ 
-- https://realpython.com/python-multiple-constructors/
