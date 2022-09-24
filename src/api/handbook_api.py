@@ -28,7 +28,6 @@ class UnitAPI:
     def _build_pagination_query(self, start: int = 0, size: int = 50, year: int = 2022):
         """
 
-        TODO: Test the limit for retrieving units in one go
 
         """
 
@@ -145,10 +144,9 @@ class UnitAPI:
                                          for item in unit_json["unit_learning_outcomes"]], key=lambda x: x[0]),
             'requisites': unit_json['requisites'],
             'enrolment_rules_group': unit_json['enrolment_rules_group'],
-            'location': [location['location']['value'] for location in unit_json['unit_offering']],
-            'teaching_periods': [teach['teaching_period']["value"] for teach in unit_json['unit_offering']],
-            # add learning_activities_grouped
-            # Add teaching_approaches
+            'offerings': [{'campus':offering["location"]["value"],
+                            'period': offering["teaching_period"]["value"],
+                            'mode':offering["attendance_mode"]['value']} for offering in unit_json['unit_offering']],
             'academic_contact_roles': [{
                 'role': role['role'],
                 'contacts': [
