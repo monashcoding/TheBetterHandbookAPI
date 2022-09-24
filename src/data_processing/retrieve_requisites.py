@@ -14,9 +14,9 @@ def perform_web_requests(unit_chunks: list[list[str]], no_workers: int):
 
         def run(self):
             """
-            
+
             Retrieves and adds rules continuously.
-            
+
             """
             while True:
                 content = self.queue.get()
@@ -24,9 +24,17 @@ def perform_web_requests(unit_chunks: list[list[str]], no_workers: int):
                     break
 
                 response = post("https://mscv.apps.monash.edu",
-                                json=self._build_post_content(content)).json()
-
-                self.results.append(response['courseErrors'])
+                                json=self._build_post_content(content))
+                try:
+                    response = response.json()
+                except json.JSONDecodeError as e:
+                    print(f'{content} failed, retrying...')
+                    self.queue.put(content)
+                    break
+                try:
+                    self.results.append(response['courseErrors'])
+                except KeyError as e:
+                    print(f'Failed to retrieve rules for {content}, {e}')
                 self.queue.task_done()
 
         def _build_post_content(self, units: list[str]) -> dict:
@@ -83,7 +91,7 @@ def perform_web_requests(unit_chunks: list[list[str]], no_workers: int):
     return r
 
 
-def load_units_csv(file_name:str = "all_units.csv"):
+def load_units_csv(file_name: str = "all_units.csv"):
     with open(file_name, 'r') as f:
         text = f.read().split("\n")
         return list(set(map(lambda x: x.split(",")[1].strip(), text)))[1:]
@@ -92,7 +100,7 @@ def load_units_csv(file_name:str = "all_units.csv"):
 def process_requisites(unit_reqs) -> dict:
     """
     TODO: Completely process the requisites.
-    
+
     """
 
     unit_req_dict = {}
@@ -106,14 +114,23 @@ def process_requisites(unit_reqs) -> dict:
 
     return unit_req_dict
 
-if __name__ == "__main__":
-    units = load_units_csv()
+
+def retrieve_requisites(unit_list: list[str]) -> dict:
+    """
+    Pulls raw requisite data from the MonPlan verification server in chunks of 125. Works in parallel.
+    :param unit_list: List of unit codes to obtain requisite rules for.
+    """
+
+    unit_chunks = [unit_list[idx:min(idx+125, len(unit_list))]
+                   for idx in range(0, len(unit_list), 125)]
+
+    return retrieve_requisite_chunks(unit_chunks)
 
 
-    unit_chunks = [units[idx:min(idx+125, len(units))]
-                for idx in range(0, len(units), 125)]
-
-
+def retrieve_requisite_chunks(unit_chunks: list[list[str]]) -> dict:
+    """
+    Retrieves raw requisite data in chunks.
+    """
     now = time.time()
     results = perform_web_requests(unit_chunks, 22)
     time_taken = time.time() - now
@@ -121,5 +138,11 @@ if __name__ == "__main__":
     print(time_taken)
     unit_reqs = [item for sublist in results for item in sublist]
 
+    return process_requisites(unit_reqs)
+
+
+if __name__ == "__main__":
+    units = load_units_csv()
+
     with open("unit_reqs_clean.json", "w") as f:
-        json.dump(process_requisites(unit_reqs), f)
+        json.dump(retrieve_requisites(units), f)
