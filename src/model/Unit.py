@@ -33,9 +33,24 @@ class Unit:
         Serialises a Unit class instance from dictionary.
         """
 
-        unit_instance = cls(...)
+        unit_instance = cls(
+            unit_info['unit_code'], unit_info['unit_name'], unit_info['credit_points'])
+
+        unit_instance.offerings = cls.Offerings.from_dictionary(
+            unit_info['unit_code'], unit_info['offerings'])
+        unit_instance.requisites = cls.Requisites.from_dictionary(
+            unit_info['unit_code'], unit_info['requisites'])
 
         return unit_instance
+
+    def to_dictionary(self):
+        return {
+            'unit_name': self.name,
+            'unit_code': self.unit_code,
+            'credit_points': self.credits,
+            'offerings': self.offerings.to_dictionary(),
+            'requisites': self.requisites.to_dictionary()
+        }
 
     def set_unit_code(self, unit_code):
         """Set new string for unit code."""
@@ -92,43 +107,48 @@ class Unit:
         """
         return self.unit_code == other.unit_code and self.name == other.name and self.credits == other.credits
 
-    class Offering:
-        """;
-        Unit offering:
-        # Campus: CLAYTON, CAULFIELD, MALAYSIA, etc
-        # Period: S1, S2, etc
-        # Mode: ONLINE, ON-CAMPUS, etc
-        """
-
-        def __init__(self, period: str, campus: str, mode: str):
-            self.campus: str = campus
-            self.period: str = period
-            self.mode: str = mode
-
-        @classmethod
-        def from_dictionary(cls, offering: dict):
-            pass
-
-        def to_dictionary(self) -> dict:
-            pass
-
-        def __repr__(self) -> str:
-            return f'{self.period}-{self.campus}-{self.mode}'
-
-        def __str__(self) -> str:
-            return f'{self.period}-{self.campus}-{self.mode}'
-
     class Offerings:
+
+        class Offering:
+            """;
+            Unit offering:
+            # Campus: CLAYTON, CAULFIELD, MALAYSIA, etc
+            # Period: S1, S2, etc
+            # Mode: ONLINE, ON-CAMPUS, etc
+            """
+
+            def __init__(self, period: str, campus: str, mode: str):
+                self.campus: str = campus
+                self.period: str = period
+                self.mode: str = mode
+
+            @classmethod
+            def from_dictionary(cls, offering: dict):
+                return cls(offering['period'], offering['campus'], offering['mode'])
+
+            def to_dictionary(self) -> dict:
+                return {'campus': self.campus, 'period': self.period, 'mode': self.mode}
+
+            def __repr__(self) -> str:
+                return f'{self.period}-{self.campus}-{self.mode}'
+
+            def __str__(self) -> str:
+                return f'{self.period}-{self.campus}-{self.mode}'
+
         def __init__(self, parent_unit):
             self.parent_unit = parent_unit
             self.all_offerings = []
 
         @classmethod
-        def from_dictionary(cls, offering_info: dict):
-            pass
+        def from_dictionary(cls, parent_unit, offering_info: list[dict]):
+            instance = cls(parent_unit)
+            for offering in offering_info:
+                instance.all_offerings.append(
+                    cls.Offering.from_dictionary(offering))
+            return instance
 
         def to_dictionary(self) -> dict:
-            pass
+            return [offer.to_dictionary() for offer in self.all_offerings]
 
         def get_all_offerings(self):
             return self.all_offerings
@@ -183,6 +203,7 @@ class Unit:
             self.corequisites: list[ReqOption] = []  # Same as above
             self.cp_required: int = 0
 
+        @classmethod
         def from_dictionary(cls, parent_unit, requisite_info: dict):
             """
             Serialises a class from a dictionary.
@@ -224,9 +245,13 @@ class Unit:
             """Set list of dictioonaries of corequisite routes/options."""
             self.corequisites = coreqs
 
-        def get_cp_required(self, cp_required: int):
-            """ Get the amount of prior CP required before enrolling"""
+        def set_cp_required(self, cp_required: int):
+            """ Set the amount of prior CP required before enrolling"""
             self.cp_required = cp_required
+
+        def get_cp_required(self) -> int:
+            """ Get the amount of prior CP required before enrolling"""
+            return self.cp_required
 
         def get_prerequisites(self) -> list[ReqOption]:
             """Get list of dictionaries of prerequisite routes/options."""
@@ -353,4 +378,4 @@ def test():
     print(fit.offerings.get_offerings_by_mode('online'))
 
 
-#test()
+# test()
